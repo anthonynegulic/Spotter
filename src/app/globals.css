@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens: the one place for colours, type, radius and spacing.
+ * Direction "Balanced" (BRIEF.md §10). Light mode only for now.
+ */
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-bg: #f4f5f8;
+  --color-card: #ffffff;
+  --color-ink: #15171c;
+  --color-ink-2: #555c6b;
+  --color-ink-3: #8a90a0;
+  --color-line: #e8eaf0;
+  --color-pill: #eef0f4;
+
+  --color-accent: #2a5ff0;
+  --color-accent-press: #1f4fd6;
+  --color-accent-tint: #e6ecff;
+  --color-accent-ink: #1e46c2;
+
+  /* Orange takes dark text: white fails contrast on it. */
+  --color-warm: #ff7a1a;
+  --color-warm-tint: #ffebdc;
+  --color-warm-ink: #8f3a00;
+  --color-on-warm: #15171c;
+
+  --color-danger: #c62828;
+  --color-success: #1d8a4e;
+
+  --radius-card: 20px;
+  --radius-panel: 16px;
+  --radius-control: 14px;
+  --radius-button: 12px;
+
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.05;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.15;
+  --text-heading: 1.125rem;
+  --text-heading--line-height: 1.3;
+
+  --spacing-gutter: 16px;
+  --spacing-tabbar: 76px;
+}
+
+:root {
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* Tabular figures for every number, so weights and timers don't jiggle. */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+input,
+textarea,
+select {
+  /* 16px stops iOS zooming into focused fields. */
+  font-size: max(16px, 1em);
+}
+
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top), 12px);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.96); }
+  40% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.animate-pop {
+  animation: pop 260ms ease-out;
+}
+
+@keyframes check-in {
+  0% { opacity: 0; transform: translateY(6px) scale(0.98); }
+  100% { opacity: 1; transform: none; }
+}
+.animate-check-in {
+  animation: check-in 220ms ease-out;
+}
+
+@keyframes rest-done {
+  0%, 100% { filter: none; }
+  50% { filter: brightness(1.12); }
+}
+.animate-rest-done {
+  animation: rest-done 900ms ease-in-out infinite;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+.animate-sheet-up {
+  animation: sheet-up 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
+}
