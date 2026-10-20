@@ -68,10 +68,16 @@ To reset a forgotten password, open the user in the same list and set a new one.
 
 **Which URL to use on the phone.** Preview deployments sit behind Vercel's
 login by default, which gets in the way of a home-screen app. Use the
-production URL (`<project>.vercel.app`). Production deploys from the repo's
-default branch; while Phase 1 is in progress that's the working branch
-`claude/laughing-dirac-6lgztw`. You can check or change it under
-**Settings → Git → Production Branch**.
+production URL (`<project>.vercel.app`).
+
+**Check which branch production follows** under **Settings → Git → Production
+Branch**. Vercel's default is `main`; if that branch doesn't exist, every push
+becomes a Preview and the phone quietly stays on the old version (this is what
+kept Phase 2 off the phone until 20 Oct 2026). To ship a specific build by
+hand: **Deployments** → **⋯** on its row → **Promote to Production**.
+
+After a new production build, open the home-screen app, wait about 10 seconds,
+close it fully and reopen it to pick up the new version.
 
 ## 5. Install on iPhone
 
@@ -111,7 +117,14 @@ each person sets this up on their own iPhone:
    copy it (it's only shown once).
 2. In Health Auto Export, follow **How to set up Health Auto Export** on that
    screen: one automation for Health Metrics and one for Workouts.
-3. Run each automation's manual sync and check **Last received** updates.
+3. **Give Health Auto Export read access** to every metric it exports: Health
+   app → your picture → **Apps** → **Health Auto Export**. iOS doesn't report a
+   missing permission, it just leaves that metric out. This is why weight,
+   lean mass and resting heart rate were missing from the first exports.
+4. In each automation, **Manual Upload** → **Begin Export**. The response shows
+   how many samples or workouts were saved, plus an `ignored` list of metric
+   names Spotter doesn't keep (normally empty). Then check **Last received**
+   updates in Spotter.
 
 If "Last received" goes stale, open Health Auto Export: iOS only runs
 background automations when it decides to. Tokens can be revoked from the same

@@ -211,16 +211,20 @@ function SetupGuide() {
         <b>Data Type:</b> Health Metrics. Select <b>Step Count, Active Energy, Apple Exercise Time, Weight &amp; Body Mass, Body Fat Percentage, Body Mass Index, Lean Body Mass</b> and <b>Resting Heart Rate</b>.
       </Step>
       <Step n={4} title="Format">
-        <b>Export Format:</b> JSON · <b>Export Version:</b> v2 · <b>Aggregate Data:</b> on, interval <b>Days</b>. For the date range, pick one that includes today (a few days is fine: Spotter updates each day rather than adding it twice).
+        <b>Export Format:</b> JSON · <b>Export Version:</b> v2 · <b>Summarize Data:</b> on · <b>Time Grouping:</b> Day. For the date range, pick one that includes today (Previous 7 Days is fine: Spotter updates each day rather than adding it twice).
       </Step>
-      <Step n={5} title="Keep the rest private">
+      <Step n={5} title="Let it read Apple Health">
+        In the Health app, tap your picture → <b>Apps</b> → <b>Health Auto Export</b> and turn on reading for all of the above, plus <b>Workouts</b> and{" "}
+        <b>Heart Rate</b>. iOS doesn&apos;t report a missing permission; that metric is just quietly left out of the export.
+      </Step>
+      <Step n={6} title="Keep the rest private">
         Turn <b>off</b> routes, ECG, cycle tracking, medications, symptoms and state of mind. Spotter doesn&apos;t use them.
       </Step>
-      <Step n={6} title="Workouts">
+      <Step n={7} title="Workouts">
         Add a second automation the same way (same URL and header) with <b>Data Type: Workouts</b>, JSON v2, routes off. Watch workouts that overlap a logged session show up in its summary.
       </Step>
-      <Step n={7} title="Test it">
-        Run each automation&apos;s manual sync. &ldquo;Last received&rdquo; above should update within a few seconds of the next sync on this phone.
+      <Step n={8} title="Test it">
+        In each automation, tap <b>Manual Upload</b> → <b>Begin Export</b>. The response should show a 200 with the number of samples or workouts saved. &ldquo;Last received&rdquo; above should update within a few seconds of the next sync on this phone.
       </Step>
       <p className="text-sm text-ink-2">
         <Chip className="mr-1 py-0.5 text-xs">Note</Chip>

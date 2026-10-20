@@ -1,5 +1,12 @@
 # Deploying the Apple Health bridge (Phase 2, milestone D)
 
+> **Done on 20 Oct 2026.** Migration applied, `health-ingest` deployed, and
+> Ante's iPhone connected (all eight metrics and Watch workouts arriving). Kept
+> for redeploys and for setting up Abrar's phone (step 5 only).
+>
+> `SUPABASE_PROJECT_REF` must be the bare ref (`wfawgoljpabblmrlqcfk`), not the
+> project URL; the commands below build URLs from it.
+
 Everything for milestone D is built and tested locally (`npm test`,
 `npm run test:db`, `npm run test:e2e`). What's left needs access to the live
 Supabase project, which a session gets from its cloud environment:
@@ -81,8 +88,10 @@ curl -sS -X POST "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/health-
 2. Follow **How to set up Health Auto Export** on that screen (two
    automations: Health Metrics and Workouts; REST API; JSON v2; aggregated by
    day; header `X-Ingest-Token`; routes, ECG, cycle tracking, medications,
-   symptoms and state of mind off). Make sure **Weight & Body Mass** is ticked:
-   his manual test export had no weight even though Apple Health has it.
+   symptoms and state of mind off).
+   Also give Health Auto Export **read access** to those metrics (Health app →
+   picture → Apps → Health Auto Export). Without it iOS silently leaves them
+   out: that's why the first exports had no weight, lean mass or resting HR.
 3. Run each automation's manual sync. **Last received** should update.
 4. Check on the server:
    ```bash

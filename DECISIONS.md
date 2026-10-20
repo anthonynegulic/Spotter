@@ -69,6 +69,7 @@ Notable product and technical decisions, with a line on why. Newest at the botto
 - **The payload parser is plain TypeScript shared by the function and the tests**, not Zod (as the brief suggested): Deno and Node import Zod differently, and a hand-written parser that skips anything malformed suits a third-party payload better than rejecting the whole batch.
 - **A Watch workout attaches to a logged session** when it overlaps it by at least 5 minutes or half the workout (allowing for the Watch being started up to 15 minutes before the first set). It's matched on the phone when showing the summary, not stored.
 - **"Last received" turns into a warning after 26 hours** without data, since iOS runs background automations on its own schedule.
+- **The function's response lists metric names it ignored**, alongside the counts saved. Health Auto Export shows the response on screen, so a renamed metric shows up there instead of silently disappearing. A failed database lookup is a server error, never "unknown token".
 - **All health reads go through `healthSource`** (`src/lib/health/source.ts`), the escape hatch for a future Capacitor/HealthKit build.
 
 ## Import
