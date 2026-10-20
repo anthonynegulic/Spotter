@@ -4,9 +4,9 @@ import type { SampleRow, WorkoutRow } from "./healthExport.ts";
 /** Minimal shape of the supabase-js client used here, so this file has no runtime imports. */
 interface Client {
   from(table: string): {
-    select(cols: string): { eq(c: string, v: string): { is(c: string, v: null): { maybeSingle(): PromiseLike<{ data: { user_id: string } | null; error: unknown }> } } };
+    select(cols: string): { eq(c: string, v: string): { is(c: string, v: null): { maybeSingle(): PromiseLike<{ data: { user_id: string } | null; error: { message: string } | null }> } } };
     upsert(rows: object[], opts: { onConflict: string }): PromiseLike<{ error: { message: string } | null }>;
-    update(patch: object): { eq(c: string, v: string): PromiseLike<{ error: unknown }> };
+    update(patch: object): { eq(c: string, v: string): PromiseLike<{ error: { message: string } | null }> };
   };
 }
 
@@ -17,7 +17,9 @@ export function supabaseStore(client: Client): IngestStore {
   };
   return {
     async userForTokenHash(hash) {
-      const { data } = await client.from("ingest_tokens").select("user_id").eq("token_hash", hash).is("revoked_at", null).maybeSingle();
+      // A failed lookup (e.g. a missing service role key) must be a server error, not "unknown token".
+      const { data, error } = await client.from("ingest_tokens").select("user_id").eq("token_hash", hash).is("revoked_at", null).maybeSingle();
+      check(error, "Checking token");
       return data?.user_id ?? null;
     },
     async upsertSamples(userId, rows: SampleRow[]) {
@@ -35,7 +37,8 @@ export function supabaseStore(client: Client): IngestStore {
       check(error, "Saving workouts");
     },
     async markTokenUsed(hash) {
-      await client.from("ingest_tokens").update({ last_used_at: new Date().toISOString() }).eq("token_hash", hash);
+      const { error } = await client.from("ingest_tokens").update({ last_used_at: new Date().toISOString() }).eq("token_hash", hash);
+      check(error, "Updating last received");
     },
   };
 }
