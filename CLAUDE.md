@@ -12,6 +12,7 @@ Setup steps for Supabase, Vercel and the phones are in `docs/SETUP.md`.
 - Items marked [DECISION] in the brief are Ante's to make: ask, don't pick.
 - Log notable decisions in `DECISIONS.md` with a sentence on why.
 - Anything involving install, offline, timers or notifications needs testing on a real iPhone.
+- Production (Vercel) deploys from `main`. Build on a `claude/...` branch and open a pull request into `main` per milestone; merging it is what ships to the phones.
 
 ## Shape of the code
 

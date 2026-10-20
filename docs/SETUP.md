@@ -70,8 +70,11 @@ To reset a forgotten password, open the user in the same list and set a new one.
 login by default, which gets in the way of a home-screen app. Use the
 production URL (`<project>.vercel.app`).
 
-**Check which branch production follows** under **Settings → Git → Production
-Branch**. Vercel's default is `main`; if that branch doesn't exist, every push
+**Production follows `main`.** Work happens on `claude/...` branches (each
+push gets a Preview) and reaches the phones only when it's merged into `main`,
+one pull request per milestone. Check the setting under **Settings →
+Environments → Production → Branch Tracking** (older dashboards: **Settings →
+Git → Production Branch**). If it names a branch that doesn't exist, every push
 becomes a Preview and the phone quietly stays on the old version (this is what
 kept Phase 2 off the phone until 20 Oct 2026). To ship a specific build by
 hand: **Deployments** → **⋯** on its row → **Promote to Production**.
