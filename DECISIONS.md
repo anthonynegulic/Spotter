@@ -14,6 +14,11 @@ Notable product and technical decisions, with a line on why. Newest at the botto
 - **No history:** the weight starts at 20 kg for barbell, 10 kg dumbbell, 20 kg machine, 15 kg cable, 12 kg kettlebell, 0 kg added for bodyweight. Reps start at the bottom of the range.
 - **PRs** use the progress-chart definitions: heaviest weight and best estimated 1RM (Epley, `w × (1 + r/30)`). Equalling a record isn't a PR, and an exercise's first session has none (working up to a weight on day one isn't a record).
 - **Portfolio or not:** open, decide at the end (BRIEF.md §11).
+- **Phase 2 order:** progress and PRs → program versions and editing → daily goals → Apple Health bridge.
+- **Drops are shown, not hidden (overrides BRIEF.md §3.4 for charts).** Ante: a negative number can be motivating and is worth drawing attention to. Change chips show both directions; drops use the warm tint with a down arrow so they're noticed without reading as an error. The finish-workout summary still never compares sessions.
+- **Re-import:** when a pasted program's name matches an existing one, the review screen offers "Update" (a new version, the default) or "Save as a new program". In-app edits also save as a new version.
+- **The week counter carries on** across new versions ("Week 4 of 8" stays week 4), with a "Restart at week 1" option on the review screen.
+- **Daily targets:** 10,000 steps; protein 2 g per kg of body weight, following the latest weigh-in from Apple Health (entered once by hand until that's flowing). All editable.
 
 ## Pre-fill and logging
 
@@ -24,6 +29,15 @@ Notable product and technical decisions, with a line on why. Newest at the botto
 - **Supersets alternate:** after logging A1 the focus moves to A2; the rest timer starts only when a full round is done.
 - **Exercise increments are edited from the wheel sheet** ("Step" chips) and saved per exercise.
 - **"Ask coach" and muscle chips from the mockups are left out until Phase 3**, rather than shipping buttons that do nothing.
+
+## Progress
+
+- **Charts:** Recharts for trend lines (estimated 1RM, top set, session volume); the weekly columns are plain HTML, which keeps their rounded tops crisp. One series per chart, the latest point marked in orange, tap for a tooltip.
+- **Estimated 1RM per session** is the best set's Epley estimate; **top set** is the heaviest weight lifted that session.
+- **Bodyweight lifts have no estimated 1RM.** It would be calculated from added weight only, which means nothing, so their detail screen starts on top set (added weight) and PR rows skip the 1RM.
+- **Sessions per week** counts finished sessions; the average uses full weeks only, since the current week isn't over. For calendar programs the current week shows its target as a pale track ("This week 2 of 4").
+- **PR history uses the same rules as the live badges** (`allPrs` is tested against `prsForSets`).
+- **The PR celebration sits at the top of the screen** for 3.5 seconds, over the just-started rest timer, so it never covers Log set.
 
 ## Import
 

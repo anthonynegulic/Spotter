@@ -72,7 +72,8 @@ function Today() {
     return (
       <>
         <OfflineNote />
-        <WorkoutView key={open.id} userId={userId} programId={open.program_id} day={day} session={open} eyebrow={eyebrow()} onFinished={setSummaryId} />
+        {/* Same key as the pre-session view below, so starting the session doesn't remount the screen. */}
+        <WorkoutView key={open.program_day_id ?? open.id} userId={userId} programId={open.program_id} day={day} session={open} eyebrow={eyebrow()} onFinished={setSummaryId} />
       </>
     );
   }

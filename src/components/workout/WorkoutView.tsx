@@ -1,7 +1,8 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { ArrowDown, ArrowUp, CalendarDays, MoreHorizontal, Plus, Repeat, SkipForward, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowUp, CalendarDays, ChartLine, MoreHorizontal, Plus, Repeat, SkipForward, Trash2, Trophy, Undo2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Fragment, useMemo, useRef, useState } from "react";
 import { db } from "@/lib/db/local";
 import {
@@ -26,6 +27,7 @@ import { newId } from "@/lib/db/write";
 import { useNow } from "@/lib/hooks/useNow";
 import { clearRest, startRest } from "@/lib/workout/rest";
 import { prsForSets } from "@/lib/workout/summary";
+import { formatKg, prKinds } from "@/lib/workout/stats";
 import { btn, Chip, cx, Sheet } from "../ui";
 import { CardioCard } from "./CardioCard";
 import { ExercisePicker } from "./ExercisePicker";
@@ -51,6 +53,9 @@ export function WorkoutView({ userId, programId, day, session, eyebrow, onChoose
   const [picker, setPicker] = useState<{ mode: "swap"; item: PlanItem } | { mode: "add" } | null>(null);
   const [headerMenu, setHeaderMenu] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [celebration, setCelebration] = useState<{ name: string; text: string } | null>(null);
+  const celebrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const router = useRouter();
 
   const plan = useMemo(() => session?.plan ?? (day ? planFromItems(day.items) : []), [session, day]);
   const exerciseIds = useMemo(
@@ -111,7 +116,8 @@ export function WorkoutView({ userId, programId, day, session, eyebrow, onChoose
   async function onLog(item: PlanItem, weight: number, reps: number) {
     const s = await ensureSession();
     const logged = setsFor(item);
-    await logSet({ userId, sessionId: s.id, exerciseId: item.exercise_id!, itemKey: item.key, setNumber: logged.length + 1, weightKg: weight, reps });
+    const row = await logSet({ userId, sessionId: s.id, exerciseId: item.exercise_id!, itemKey: item.key, setNumber: logged.length + 1, weightKg: weight, reps });
+    celebrateIfPr(item, row);
 
     const count = (it: PlanItem) => setsFor(it).length + (it.key === item.key ? 1 : 0);
     const group = item.superset_group ? plan.filter((p) => p.superset_group === item.superset_group && !p.skipped && p.type === "strength") : [item];
@@ -128,6 +134,17 @@ export function WorkoutView({ userId, programId, day, session, eyebrow, onChoose
     } else {
       setFocusKey(count(item) >= item.sets ? null : item.key);
     }
+  }
+
+  /** A small moment when a set beats a previous session's best (same rules as the PR badges). */
+  function celebrateIfPr(item: PlanItem, row: SetRow) {
+    const earlier = (allByExercise.get(row.exercise_id) ?? []).filter((o) => o.id !== row.id);
+    if (!earlier.some((o) => o.session_id !== row.session_id)) return;
+    if (prKinds(row, earlier).length === 0) return;
+    const bw = (exercises.get(row.exercise_id)?.equipment ?? item.equipment) === "bodyweight";
+    setCelebration({ name: item.name, text: `${bw ? "BW + " : ""}${formatKg(row.weight_kg)} kg × ${row.reps}` });
+    if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
+    celebrationTimer.current = setTimeout(() => setCelebration(null), 3500);
   }
 
   async function onLogCardio(item: PlanItem, values: Pick<CardioRow, "duration_min" | "incline" | "speed_kmh" | "distance_km">) {
@@ -219,9 +236,29 @@ export function WorkoutView({ userId, programId, day, session, eyebrow, onChoose
       </button>
       {!anythingLogged && <p className="-mt-1 text-center text-sm text-ink-3">Log a set to start the clock.</p>}
 
+      {celebration && (
+        // Top of the screen, over the just-started rest timer, so it never covers Log set.
+        <div className="pointer-events-none fixed inset-x-0 top-[max(env(safe-area-inset-top),8px)] z-50 flex justify-center px-[var(--spacing-gutter)]" role="status">
+          <div className="animate-pop flex w-full max-w-xl items-center gap-3 rounded-[var(--radius-card)] bg-warm px-5 py-4 text-on-warm shadow-lg shadow-warm/30">
+            <Trophy className="size-7 shrink-0" />
+            <div className="min-w-0">
+              <div className="font-extrabold">New PR!</div>
+              <div className="truncate font-semibold">
+                {celebration.name} · {celebration.text}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Sheet open={menuFor !== null} onClose={() => setMenuFor(null)} title={menuFor?.name}>
         {menuFor && (
           <MenuList>
+            {menuFor.type === "strength" && menuFor.exercise_id && (
+              <MenuButton icon={ChartLine} onClick={() => router.push(`/progress/exercise?id=${menuFor.exercise_id}`)}>
+                View progress
+              </MenuButton>
+            )}
             {menuFor.type === "strength" && (
               <MenuButton icon={Repeat} onClick={() => { setPicker({ mode: "swap", item: menuFor }); setMenuFor(null); }}>
                 Swap for today
