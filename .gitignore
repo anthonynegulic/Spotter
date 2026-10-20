@@ -43,3 +43,6 @@ next-env.d.ts
 
 # e2e
 /e2e/screenshots/
+
+# supabase cli local state
+supabase/.temp/
