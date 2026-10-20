@@ -2,7 +2,10 @@
 
 import { useEffect } from "react";
 import { AuthProvider } from "@/lib/auth";
-import { requestSync } from "@/lib/db/sync";
+import { repairMergedExercises } from "@/lib/db/repo";
+import { onAfterPull, requestSync } from "@/lib/db/sync";
+
+onAfterPull(repairMergedExercises);
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {

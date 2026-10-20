@@ -31,18 +31,62 @@ export async function importProgram(opts: {
   const { program, raw, userId, makeActive } = opts;
   const now = nowIso();
   const rows: Pending = [];
-
   const programId = newId();
   if (makeActive) rows.push(...(await deactivateOthers(programId)));
   rows.push([
     "programs",
     { id: programId, user_id: userId, name: program.name, is_active: makeActive, activated_at: makeActive ? now : null, created_at: now, deleted_at: null } satisfies ProgramRow,
   ]);
+  rows.push(...(await versionRows({ programId, version: 1, program, raw, userId })));
+  await saveRows(rows);
+  return programId;
+}
+
+/**
+ * Saves a revised program (a re-import or in-app edits) as the next version
+ * of an existing program. History hangs off exercises, so nothing logged is
+ * lost. The week counter carries on unless `restartWeek` is set.
+ */
+export async function addProgramVersion(opts: {
+  programId: string;
+  program: Program;
+  raw: unknown;
+  userId: string;
+  makeActive: boolean;
+  restartWeek: boolean;
+}): Promise<void> {
+  const { programId, program, raw, userId, makeActive, restartWeek } = opts;
+  const existing = await db.programs.get(programId);
+  if (!existing) throw new Error("Program not found");
+  const versions = await db.program_versions.where("program_id").equals(programId).toArray();
+  const version = Math.max(0, ...versions.map((v) => v.version)) + 1;
+  const now = nowIso();
+  const becomesActive = makeActive || existing.is_active;
+  const rows: Pending = [];
+  if (makeActive && !existing.is_active) rows.push(...(await deactivateOthers(programId)));
+  rows.push([
+    "programs",
+    {
+      ...existing,
+      name: program.name,
+      is_active: becomesActive,
+      activated_at: restartWeek || (makeActive && !existing.is_active) ? now : existing.activated_at ?? (becomesActive ? now : null),
+    },
+  ]);
+  rows.push(...(await versionRows({ programId, version, program, raw, userId })));
+  await saveRows(rows);
+}
+
+/** Version, day and item rows for a program, plus any new exercises and aliases it needs. */
+async function versionRows(opts: { programId: string; version: number; program: Program; raw: unknown; userId: string }): Promise<Pending> {
+  const { programId, version, program, raw, userId } = opts;
+  const now = nowIso();
+  const rows: Pending = [];
   const versionId = newId();
   rows.push([
     "program_versions",
     {
-      id: versionId, user_id: userId, program_id: programId, version: 1, schema_version: program.schemaVersion,
+      id: versionId, user_id: userId, program_id: programId, version, schema_version: program.schemaVersion,
       author: program.author ?? null, weeks: program.weeks ?? null, progression_notes: program.progressionNotes ?? null,
       raw_json: raw, created_at: now,
     } satisfies ProgramVersionRow,
@@ -105,8 +149,8 @@ export async function importProgram(opts: {
     });
   });
 
-  await saveRows([...rows, ...exerciseRows, ...aliasRows, ...itemRows]);
-  return programId;
+  // Parents first: days need their version, items need their exercises.
+  return [...rows, ...exerciseRows, ...aliasRows, ...itemRows];
 }
 
 export async function setActiveProgram(programId: string): Promise<void> {
@@ -146,6 +190,71 @@ export async function findOrCreateExercise(name: string, equipment: Equipment, u
   };
   await saveRow("exercises", row);
   return row;
+}
+
+/**
+ * Merges `fromId` into `intoId`: every set, program item and session plan
+ * entry moves across, aliases follow (plus the old name), and the old
+ * exercise is retired with a pointer to where it went. Can't be undone.
+ */
+export async function mergeExercises(fromId: string, intoId: string): Promise<void> {
+  if (fromId === intoId) return;
+  const [from, into] = await Promise.all([db.exercises.get(fromId), db.exercises.get(intoId)]);
+  if (!from || !into) throw new Error("Exercise not found");
+  const now = nowIso();
+  const rows: Pending = [];
+
+  const intoAliases = new Set([simple(into.name), ...(await db.exercise_aliases.where("exercise_id").equals(intoId).toArray()).map((a) => simple(a.alias))]);
+  const fromAliases = await db.exercise_aliases.where("exercise_id").equals(fromId).toArray();
+  for (const a of fromAliases) {
+    if (intoAliases.has(simple(a.alias))) continue; // (exercise_id, alias) is unique on the server
+    intoAliases.add(simple(a.alias));
+    rows.push(["exercise_aliases", { ...a, exercise_id: intoId }]);
+  }
+  if (!intoAliases.has(simple(from.name))) {
+    rows.push(["exercise_aliases", { id: newId(), user_id: into.user_id, exercise_id: intoId, alias: simple(from.name), created_at: now }]);
+  }
+
+  rows.push(...(await repointRows(fromId, intoId)));
+  rows.push(["exercises", { ...from, deleted_at: now, merged_into: intoId }]);
+  await saveRows(rows);
+}
+
+/** Rows that still reference `fromId`, re-pointed at `intoId`. */
+async function repointRows(fromId: string, intoId: string): Promise<Pending> {
+  const rows: Pending = [];
+  for (const s of await db.sets.where("exercise_id").equals(fromId).toArray()) rows.push(["sets", { ...s, exercise_id: intoId }]);
+  for (const it of await db.program_items.where("exercise_id").equals(fromId).toArray()) rows.push(["program_items", { ...it, exercise_id: intoId }]);
+  const into = await db.exercises.get(intoId);
+  for (const session of await db.sessions.toArray()) {
+    if (!session.plan.some((p) => p.exercise_id === fromId)) continue;
+    rows.push([
+      "sessions",
+      { ...session, plan: session.plan.map((p) => (p.exercise_id === fromId ? { ...p, exercise_id: intoId, name: into?.name ?? p.name } : p)) },
+    ]);
+  }
+  return rows;
+}
+
+/**
+ * A phone that was offline during a merge may later sync sets that still
+ * point at the retired exercise. Run after each pull to move them across.
+ */
+export async function repairMergedExercises(): Promise<void> {
+  const merged = (await db.exercises.toArray()).filter((e) => e.merged_into);
+  if (merged.length === 0) return;
+  const final = (id: string) => {
+    let cur = id;
+    for (let i = 0; i < 10; i++) {
+      const next = merged.find((m) => m.id === cur)?.merged_into;
+      if (!next) break;
+      cur = next;
+    }
+    return cur;
+  };
+  const rows: Pending = [];
+  for (const m of merged) rows.push(...(await repointRows(m.id, final(m.id))));
+  if (rows.length) await saveRows(rows);
 }
 
 export async function setExerciseIncrement(exerciseId: string, incrementKg: number): Promise<void> {

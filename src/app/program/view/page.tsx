@@ -1,6 +1,8 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
+import { Pencil } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -54,11 +56,25 @@ function ProgramView() {
 
   return (
     <>
-      <ScreenHeader title={program.name} back="/program" />
+      <ScreenHeader
+        title={program.name}
+        back="/program"
+        right={
+          <Link href={`/program/edit?id=${program.id}`} className={btn.tinted} aria-label="Edit program">
+            <Pencil className="size-4" /> Edit
+          </Link>
+        }
+      />
       <div className="flex flex-col gap-4 px-[var(--spacing-gutter)] pb-10">
         <Card className="p-5">
           <p className="text-ink-2">
-            {[version.author && `By ${version.author}`, version.weeks && `${version.weeks} weeks`].filter(Boolean).join(" · ")}
+            {[
+              version.author && `By ${version.author}`,
+              version.weeks && `${version.weeks} weeks`,
+              version.version > 1 && `Version ${version.version}, ${new Date(version.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {program.is_active && <Chip tone="blue">Active</Chip>}

@@ -43,6 +43,12 @@ function update(patch: Partial<SyncState>) {
 }
 
 let client: SupabaseClient | null = null;
+const afterPull: (() => Promise<void>)[] = [];
+
+/** Run after every successful pull, e.g. to tidy up rows that arrived from another phone. */
+export function onAfterPull(fn: () => Promise<void>) {
+  afterPull.push(fn);
+}
 let running: Promise<void> | null = null;
 let again = false;
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -80,6 +86,7 @@ export async function syncNow(): Promise<void> {
         again = false;
         await push(client!);
         await pull(client!);
+        for (const fn of afterPull) await fn();
       } while (again);
       update({ lastSyncedAt: new Date().toISOString(), lastError: null });
     } catch (e) {

@@ -68,6 +68,8 @@ export interface ExerciseRow {
   equipment: Equipment;
   increment_kg: number;
   library_ref: string | null;
+  /** Set when this exercise was merged into another; its history now lives there. */
+  merged_into?: string | null;
   created_at: string;
   updated_at?: string;
   deleted_at: string | null;

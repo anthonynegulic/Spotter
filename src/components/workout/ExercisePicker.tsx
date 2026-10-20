@@ -15,24 +15,40 @@ export function ExercisePicker({
   title,
   defaultEquipment,
   onPick,
+  excludeId,
+  existingOnly = false,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   defaultEquipment: Equipment;
   onPick: (choice: { existing: ExerciseRow } | { name: string; equipment: Equipment }) => void;
+  /** Leave this exercise out of the list (e.g. the one being merged). */
+  excludeId?: string;
+  /** Only allow picking an exercise you already have. */
+  existingOnly?: boolean;
 }) {
   return (
     <Sheet open={open} onClose={onClose} title={title}>
-      {open && <PickerBody defaultEquipment={defaultEquipment} onPick={onPick} />}
+      {open && <PickerBody defaultEquipment={defaultEquipment} onPick={onPick} excludeId={excludeId} existingOnly={existingOnly} />}
     </Sheet>
   );
 }
 
-function PickerBody({ defaultEquipment, onPick }: { defaultEquipment: Equipment; onPick: Parameters<typeof ExercisePicker>[0]["onPick"] }) {
+function PickerBody({
+  defaultEquipment,
+  onPick,
+  excludeId,
+  existingOnly,
+}: {
+  defaultEquipment: Equipment;
+  onPick: Parameters<typeof ExercisePicker>[0]["onPick"];
+  excludeId?: string;
+  existingOnly: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [equipment, setEquipment] = useState<Equipment>(defaultEquipment);
-  const exercises = useLiveQuery(async () => (await db.exercises.toArray()).filter((e) => !e.deleted_at), []);
+  const exercises = useLiveQuery(async () => (await db.exercises.toArray()).filter((e) => !e.deleted_at && e.id !== excludeId), [excludeId]);
   const q = query.trim().toLowerCase();
   const matches = (exercises ?? [])
     .filter((e) => !q || e.name.toLowerCase().includes(q))
@@ -48,12 +64,12 @@ function PickerBody({ defaultEquipment, onPick }: { defaultEquipment: Equipment;
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search or type a new exercise"
+          placeholder={existingOnly ? "Search your exercises" : "Search or type a new exercise"}
           className="min-w-0 flex-1 bg-transparent outline-none"
         />
       </label>
 
-      {q && !exact && (
+      {q && !exact && !existingOnly && (
         <div className="rounded-[var(--radius-panel)] bg-accent-tint/50 p-3">
           <div className="mb-2 flex flex-wrap gap-1.5">
             {EQUIPMENT.map((eq) => (

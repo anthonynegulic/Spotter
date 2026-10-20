@@ -16,6 +16,15 @@ The schema is in `supabase/migrations/`. Either:
 
 Run each new migration file once, in filename order, as later phases add them.
 
+| File | Added in | What it does |
+|---|---|---|
+| `20261019000000_phase1.sql` | Phase 1 | All tables, privacy rules |
+| `20261021000000_exercise_merge.sql` | Phase 2, milestone B | Lets exercises be merged ("Merge with…") |
+
+Supabase's SQL editor may warn that a query creates tables without RLS. The
+Phase 1 file turns RLS on in a loop the checker can't see, so choosing "Run
+with RLS" is fine.
+
 ## 2. Supabase: lock down sign-up
 
 **Authentication → Sign In / Providers**:

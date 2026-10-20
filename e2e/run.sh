@@ -60,4 +60,5 @@ node_modules/.bin/serve out -l 3000 >"$WORK/serve.log" 2>&1 & PIDS+=($!)
 sleep 3
 
 node e2e/workout.e2e.mjs
+node e2e/program.e2e.mjs
 node e2e/progress.e2e.mjs

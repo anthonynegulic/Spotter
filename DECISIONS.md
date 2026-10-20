@@ -39,6 +39,15 @@ Notable product and technical decisions, with a line on why. Newest at the botto
 - **PR history uses the same rules as the live badges** (`allPrs` is tested against `prsForSets`).
 - **The PR celebration sits at the top of the screen** for 3.5 seconds, over the just-started rest timer, so it never covers Log set.
 
+## Program versions, editing and merging
+
+- **Every change is a new version.** Re-imports and in-app edits both save the next `program_versions` row, so the diff, history and the "Version 3, 21 Oct" label behave the same either way. Older versions are kept, not overwritten.
+- **Diffs match days by id, then name, and exercises by name** (ignoring case, word order and plurals). A swapped exercise shows as one removed and one added, which is what it is.
+- **The editor is a draft until "Review changes"**, which shows the same diff as a re-import and validates with the import schema before saving. Leaving with unsaved changes asks first.
+- **Workouts already in progress keep their plan** when a new version lands; the next session uses the new one. Today's day is chosen by day id, so it survives versions.
+- **Merging is one-way and can't be undone.** The picked exercise keeps its name; the other's sets, program items, in-progress plans and aliases move across, its name becomes an alias, and it's retired with `merged_into` pointing at the survivor. Aliases already on the survivor aren't duplicated (the server enforces one per exercise).
+- **Merges repair themselves across phones.** After every pull, any set still pointing at a retired exercise (logged offline on another phone during the merge) is moved to where it went.
+
 ## Import
 
 - **Silent matching is conservative.** Exact name, then alias, then a fuzzy match only when every word lines up after expanding abbreviations (DB, BB, RDL, OHP…), ignoring word order and plurals, and allowing a one-letter typo in longer words. Different equipment never fuzzy-matches. Anything less certain becomes a new exercise; a duplicate can be merged in Phase 2, but a wrong merge silently corrupts history.
