@@ -90,7 +90,7 @@ describe("handleIngest", () => {
     const store = memoryStore();
     const first = await handleIngest(post(fixture, TOKEN), store);
     expect(first.status).toBe(200);
-    expect(await first.json()).toEqual({ samples: 7, workouts: 2, skipped: 0 });
+    expect(await first.json()).toEqual({ samples: 7, workouts: 2, skipped: 0, ignored: ["heart_rate"] });
     await handleIngest(post(fixture, TOKEN), store);
     expect(store.samples.size).toBe(7);
     expect(store.workouts.size).toBe(2);

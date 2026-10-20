@@ -33,6 +33,8 @@ export interface ParsedExport {
   samples: SampleRow[];
   workouts: WorkoutRow[];
   skipped: number;
+  /** Metric names in the payload that Spotter doesn't keep, so a renamed metric isn't lost silently. */
+  ignored: string[];
 }
 
 /** Health Auto Export metric name → Spotter metric and the unit we store it in. */
@@ -90,14 +92,18 @@ const unitOf = (v: unknown): string | null => (v && typeof v === "object" && typ
 const round = (v: number, places: number) => Math.round(v * 10 ** places) / 10 ** places;
 
 export function parseHealthExport(body: unknown): ParsedExport {
-  const out: ParsedExport = { samples: [], workouts: [], skipped: 0 };
+  const out: ParsedExport = { samples: [], workouts: [], skipped: 0, ignored: [] };
   const data = (body as { data?: { metrics?: unknown; workouts?: unknown } } | null)?.data;
   if (!data || typeof data !== "object") throw new Error("Expected a Health Auto Export JSON body with a `data` object");
 
   for (const m of Array.isArray(data.metrics) ? data.metrics : []) {
     const name = (m as { name?: unknown })?.name;
     const map = typeof name === "string" ? METRICS[name] : undefined;
-    if (!map) continue; // not a metric we keep (e.g. raw heart_rate)
+    if (!map) {
+      // Not a metric we keep (e.g. raw heart_rate). Reported back so a renamed one is noticed.
+      if (typeof name === "string" && !out.ignored.includes(name)) out.ignored.push(name);
+      continue;
+    }
     const units = String((m as { units?: unknown }).units ?? "");
     for (const point of Array.isArray((m as { data?: unknown }).data) ? (m as { data: unknown[] }).data : []) {
       const p = point as { date?: unknown; qty?: unknown; source?: unknown };

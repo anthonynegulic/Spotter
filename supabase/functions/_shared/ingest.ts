@@ -55,5 +55,5 @@ export async function handleIngest(req: Request, store: IngestStore): Promise<Re
   if (workouts.length) await store.upsertWorkouts(userId, workouts);
   await store.markTokenUsed(hash);
 
-  return json(200, { samples: samples.length, workouts: workouts.length, skipped: parsed.skipped });
+  return json(200, { samples: samples.length, workouts: workouts.length, skipped: parsed.skipped, ignored: parsed.ignored });
 }
