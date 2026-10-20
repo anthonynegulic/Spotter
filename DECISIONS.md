@@ -60,6 +60,17 @@ Notable product and technical decisions, with a line on why. Newest at the botto
 - **Body weight lives in `health_samples`** (metric `body_mass`), whether typed in or from Apple Health, so the protein target always uses the latest weigh-in from either.
 - **Health samples are keyed by user, metric and time, not source.** Apple Health relabels a day's source during the day ("Watch" becomes "Watch|iPhone" once both contribute), so keying on it would count some days twice. Daily totals carry `local_date`, the calendar day they belong to, so a phone in a different time zone still files them correctly.
 
+## Apple Health bridge
+
+- **Health Auto Export posts to a Supabase Edge Function, `health-ingest`,** deployed with JWT checks off. It authenticates with a per-user ingest token in an `X-Ingest-Token` header (a Bearer header also works), never the user's session.
+- **Tokens are made on the phone and only their SHA-256 hash is stored.** The token is shown once, can be revoked, and only lets data in; it can't read anything.
+- **The function writes with the service role** and upserts samples on (user, metric, time) and workouts on (user, Apple Health workout id), so automation retries and overlapping date ranges never duplicate.
+- **What's kept:** daily steps, active energy (converted to kcal), exercise minutes, weight, body fat, BMI, lean mass and resting heart rate, plus one summary per workout (time, energy, average and max heart rate). Per-minute heart rate, routes and splits are dropped on arrival.
+- **The payload parser is plain TypeScript shared by the function and the tests**, not Zod (as the brief suggested): Deno and Node import Zod differently, and a hand-written parser that skips anything malformed suits a third-party payload better than rejecting the whole batch.
+- **A Watch workout attaches to a logged session** when it overlaps it by at least 5 minutes or half the workout (allowing for the Watch being started up to 15 minutes before the first set). It's matched on the phone when showing the summary, not stored.
+- **"Last received" turns into a warning after 26 hours** without data, since iOS runs background automations on its own schedule.
+- **All health reads go through `healthSource`** (`src/lib/health/source.ts`), the escape hatch for a future Capacitor/HealthKit build.
+
 ## Import
 
 - **Silent matching is conservative.** Exact name, then alias, then a fuzzy match only when every word lines up after expanding abbreviations (DB, BB, RDL, OHP…), ignoring word order and plurals, and allowing a one-letter typo in longer words. Different equipment never fuzzy-matches. Anything less certain becomes a new exercise; a duplicate can be merged in Phase 2, but a wrong merge silently corrupts history.

@@ -1,9 +1,11 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { Trophy } from "lucide-react";
+import { HeartPulse, Trophy } from "lucide-react";
 import { db } from "@/lib/db/local";
 import { exerciseHistory } from "@/lib/db/repo";
+import { matchWorkout } from "@/lib/health/attach";
+import { healthSource } from "@/lib/health/source";
 import type { SetRow } from "@/lib/db/types";
 import { countThisWeek, encouragement, prsForSets, summarise } from "@/lib/workout/summary";
 import { formatKg } from "@/lib/workout/stats";
@@ -22,11 +24,14 @@ export function Summary({ sessionId, onClose }: { sessionId: string; onClose: ()
     const exercises = new Map((await db.exercises.bulkGet(exerciseIds)).filter(Boolean).map((e) => [e!.id, e!]));
     const sessions = (await db.sessions.toArray()).filter((s) => !s.deleted_at && s.finished_at);
     const summary = summarise(session, sets, cardio, prsForSets(sets, all));
-    return { session, summary, exercises, sessions };
+    const day = new Date(session.started_at).getTime();
+    const nearby = await healthSource.workoutsBetween(new Date(day - 86_400_000), new Date(day + 86_400_000));
+    const watch = matchWorkout(session, nearby);
+    return { session, summary, exercises, sessions, watch };
   }, [sessionId]);
 
   if (!data) return null;
-  const { session, summary, exercises, sessions } = data;
+  const { session, summary, exercises, sessions, watch } = data;
   const message = encouragement({
     prCount: summary.prs.length,
     sessionsThisWeek: countThisWeek(sessions, new Date(session.started_at)),
@@ -50,6 +55,20 @@ export function Summary({ sessionId, onClose }: { sessionId: string; onClose: ()
         <Stat label="Volume" value={summary.volumeKg.toLocaleString("en-AU")} unit="kg" />
       </div>
       {summary.cardioMin > 0 && <Stat label="Cardio" value={`${summary.cardioMin}`} unit="min" />}
+
+      {watch && (
+        <Card className="p-5">
+          <h2 className="mb-3 flex items-center gap-2 text-heading font-extrabold">
+            <HeartPulse className="size-5 text-warm" /> From your Watch
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <WatchStat label="Calories" value={watch.active_kcal} unit="kcal" />
+            <WatchStat label="Avg HR" value={watch.avg_hr} unit="bpm" />
+            <WatchStat label="Max HR" value={watch.max_hr} unit="bpm" />
+          </div>
+          <p className="mt-3 text-sm text-ink-2">{watch.name}, matched by time.</p>
+        </Card>
+      )}
 
       {prLines.length > 0 && (
         <Card className="p-5">
@@ -83,6 +102,18 @@ export function Summary({ sessionId, onClose }: { sessionId: string; onClose: ()
       <button onClick={onClose} className={`${btn.primary} mt-2 w-full`}>
         Done
       </button>
+    </div>
+  );
+}
+
+function WatchStat({ label, value, unit }: { label: string; value: number | null; unit: string }) {
+  return (
+    <div>
+      <div className="text-sm font-semibold text-ink-2">{label}</div>
+      <div className="text-xl font-extrabold">
+        {value === null ? "–" : Math.round(value)}
+        {value !== null && <span className="ml-1 text-sm font-semibold text-ink-2">{unit}</span>}
+      </div>
     </div>
   );
 }

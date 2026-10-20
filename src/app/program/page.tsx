@@ -86,7 +86,8 @@ function Account() {
           <button onClick={() => void syncNow()} className={btn.quiet}>Sync now</button>
         </div>
         {sync.lastError && sync.stuck > 0 && <p className="text-sm text-warm-ink">{sync.lastError}</p>}
-        <button onClick={() => void signOut()} className={`${btn.quiet} mt-1`}>Sign out</button>
+        <Link href="/settings" className={`${btn.quiet} mt-1`}>Settings &amp; Apple Health</Link>
+        <button onClick={() => void signOut()} className={btn.quiet}>Sign out</button>
       </Card>
     </div>
   );

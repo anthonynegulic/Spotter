@@ -1,0 +1,41 @@
+{
+  "data": {
+    "metrics": [
+      { "name": "active_energy", "units": "kJ", "data": [{ "date": "2026-10-19 00:00:00 +1100", "qty": 2092, "source": "Test Watch" }] },
+      { "name": "apple_exercise_time", "units": "min", "data": [{ "date": "2026-10-19 00:00:00 +1100", "qty": 45, "source": "Test Watch" }] },
+      { "name": "body_fat_percentage", "units": "%", "data": [{ "qty": 20.5, "date": "2026-10-19 00:00:00 +1100", "source": "RENPHO Health" }] },
+      { "name": "body_mass_index", "units": "count", "data": [{ "date": "2026-10-19 00:00:00 +1100", "qty": 24.1, "source": "RENPHO Health" }] },
+      { "name": "weight_body_mass", "units": "kg", "data": [{ "date": "2026-10-19 00:00:00 +1100", "qty": 80.4, "source": "RENPHO Health" }] },
+      { "name": "resting_heart_rate", "units": "count/min", "data": [{ "date": "2026-10-19 00:00:00 +1100", "qty": 58, "source": "Test Watch" }] },
+      { "name": "heart_rate", "units": "count/min", "data": [{ "Max": 150, "source": "Test Watch", "Min": 50, "Avg": 90, "date": "2026-10-19 00:00:00 +1100" }] },
+      { "name": "step_count", "units": "count", "data": [{ "qty": 8000, "date": "2026-10-19 00:00:00 +1100", "source": "Test Watch|Test iPhone" }] }
+    ],
+    "workouts": [
+      {
+        "id": "11111111-2222-3333-4444-555555555555",
+        "name": "Traditional Strength Training",
+        "start": "2026-10-19 05:45:00 +1100",
+        "end": "2026-10-19 06:30:00 +1100",
+        "duration": 2700,
+        "activeEnergyBurned": { "qty": 1046, "units": "kJ" },
+        "heartRate": { "avg": { "qty": 120.4, "units": "count/min" }, "max": { "qty": 160, "units": "count/min" }, "min": { "qty": 80, "units": "count/min" } },
+        "avgHeartRate": { "qty": 120.4, "units": "count/min" },
+        "maxHeartRate": { "qty": 160, "units": "count/min" },
+        "source": { "name": "Test Watch", "identifier": "com.apple.health.x" },
+        "heartRateData": [{ "Max": 130, "Avg": 120, "Min": 110, "units": "count/min", "date": "2026-10-19 05:46:00 +1100" }],
+        "stepCount": [{ "units": "count", "qty": 12, "date": "2026-10-19 05:46:00 +1100", "source": "Test Watch" }]
+      },
+      {
+        "id": "66666666-7777-8888-9999-000000000000",
+        "name": "Outdoor Walk",
+        "start": "2026-10-19 13:00:00 +1100",
+        "end": "2026-10-19 13:20:00 +1100",
+        "duration": 1200,
+        "activeEnergyBurned": { "qty": 418.4, "units": "kJ" },
+        "avgHeartRate": { "qty": 105, "units": "count/min" },
+        "maxHeartRate": { "qty": 130, "units": "count/min" },
+        "source": { "name": "Test Watch" }
+      }
+    ]
+  }
+}

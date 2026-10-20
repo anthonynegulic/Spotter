@@ -1,0 +1,4 @@
+# Supabase CLI settings used when deploying from this repo.
+[functions.health-ingest]
+# Health Auto Export authenticates with a Spotter ingest token, not a Supabase JWT.
+verify_jwt = false

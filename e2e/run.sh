@@ -37,7 +37,7 @@ mkdir -p "$WORK/pg"
 PSQL=(psql -h 127.0.0.1 -p "$E2E_PG_PORT" -U postgres -v ON_ERROR_STOP=1 -q)
 "${PSQL[@]}" -c "create database app"
 "${PSQL[@]}" -d app -f supabase/tests/auth_stub.sql
-"${PSQL[@]}" -d app -c "create role authenticator login noinherit; grant anon, authenticated to authenticator;"
+"${PSQL[@]}" -d app -c "create role authenticator login noinherit; grant anon, authenticated, service_role to authenticator;"
 for f in supabase/migrations/*.sql; do "${PSQL[@]}" -d app -f "$f"; done
 "${PSQL[@]}" -d app -c "insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000a','ante@example.com'), ('00000000-0000-0000-0000-00000000000b','abrar@example.com')"
 
@@ -51,11 +51,12 @@ server-port = 3001
 server-host = "127.0.0.1"
 CONF
 "$WORK/postgrest" "$WORK/postgrest.conf" >"$WORK/postgrest.log" 2>&1 & PIDS+=($!)
-node e2e/gateway.mjs >"$WORK/gateway.log" 2>&1 & PIDS+=($!)
+node --experimental-strip-types --no-warnings e2e/gateway.mjs >"$WORK/gateway.log" 2>&1 & PIDS+=($!)
 
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 \
 NEXT_PUBLIC_SUPABASE_ANON_KEY="$(node e2e/gateway.mjs anon-key)" \
   npm run build >"$WORK/build.log" 2>&1
+sleep 1
 node_modules/.bin/serve out -l 3000 >"$WORK/serve.log" 2>&1 & PIDS+=($!)
 sleep 3
 
@@ -63,3 +64,4 @@ node e2e/workout.e2e.mjs
 node e2e/program.e2e.mjs
 node e2e/goals.e2e.mjs
 node e2e/progress.e2e.mjs
+node e2e/health.e2e.mjs

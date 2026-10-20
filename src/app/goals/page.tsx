@@ -104,6 +104,13 @@ function Goals() {
         <span className="text-ink-2">goals done{offset === 0 ? " so far" : ""}</span>
       </p>
 
+      {!data.samples.some((s) => s.source !== "manual") && visible.some((g) => g.source === "auto") && offset === 0 && (
+        <Link href="/settings" className="flex items-center justify-between rounded-[var(--radius-card)] bg-accent-tint px-5 py-4 font-bold text-accent-ink">
+          Connect Apple Health to fill these in automatically
+          <ChevronRight className="size-5" />
+        </Link>
+      )}
+
       {protein && !weight && (
         <Card className="flex items-center gap-3 p-4">
           <span className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-tint text-accent-ink">

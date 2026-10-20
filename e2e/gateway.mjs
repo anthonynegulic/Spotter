@@ -1,7 +1,12 @@
 // Minimal Supabase stand-in for e2e: GoTrue-ish password auth issuing HS256
-// JWTs, and /rest/v1 proxied to a real PostgREST (so RLS is real).
+// JWTs, /rest/v1 proxied to a real PostgREST (so RLS is real), and
+// /functions/v1/health-ingest served by the same handler the Edge Function
+// uses. Run with: node --experimental-strip-types e2e/gateway.mjs
 import http from "node:http";
 import crypto from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
+import { handleIngest } from "../supabase/functions/_shared/ingest.ts";
+import { supabaseStore } from "../supabase/functions/_shared/supabaseStore.ts";
 
 const SECRET = process.env.E2E_JWT_SECRET ?? "e2e-secret-e2e-secret-e2e-secret-0123";
 const PGRST = process.env.E2E_PGRST_URL ?? "http://127.0.0.1:3001";
@@ -35,6 +40,11 @@ const cors = {
 };
 const send = (res, code, body) => { res.writeHead(code, { "content-type": "application/json", ...cors }); res.end(body === undefined ? "" : JSON.stringify(body)); };
 
+// The Edge Function's service-role client, pointed back at this gateway's REST proxy.
+const ingestStore = supabaseStore(
+  createClient("http://127.0.0.1:54321", jwt({ role: "service_role", iss: "e2e", exp: 4102444800 }), { auth: { persistSession: false } }),
+);
+
 http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") return send(res, 204);
   const url = new URL(req.url, "http://x");
@@ -60,6 +70,11 @@ http.createServer(async (req, res) => {
     return send(res, 200, session(email).user);
   }
   if (url.pathname === "/auth/v1/logout") return send(res, 204);
+  if (url.pathname === "/functions/v1/health-ingest") {
+    const r = await handleIngest(new Request(`http://localhost${url.pathname}`, { method: req.method, headers: req.headers, body: ["GET", "HEAD"].includes(req.method) ? undefined : raw }), ingestStore);
+    res.writeHead(r.status, { ...cors, "content-type": "application/json" });
+    return res.end(await r.text());
+  }
   if (url.pathname.startsWith("/rest/v1/")) {
     const headers = { ...req.headers };
     delete headers.host; delete headers.apikey; delete headers["content-length"];

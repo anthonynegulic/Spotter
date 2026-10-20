@@ -1,4 +1,5 @@
 import { addDays } from "@/lib/goals/goals";
+import { healthSource } from "@/lib/health/source";
 import { db } from "./local";
 import type { DailyEntryRow, DailyGoalRow, HealthSampleRow } from "./types";
 
@@ -14,7 +15,7 @@ export async function loadGoals(today: string): Promise<GoalsData> {
   const [goals, entries, samples] = await Promise.all([
     db.daily_goals.toArray(),
     db.daily_entries.where("date").aboveOrEqual(from).toArray(),
-    db.health_samples.toArray(),
+    healthSource.allSamples(),
   ]);
   return {
     goals: goals.filter((g) => !g.deleted_at).sort((a, b) => a.sort - b.sort),

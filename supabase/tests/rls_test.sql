@@ -28,6 +28,8 @@ insert into public.cardio_entries (id, user_id, session_id, name, duration_min, 
 insert into public.daily_goals (id, user_id, type, label, target, unit) values ('90000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', 'protein', 'Protein', 170, 'g');
 insert into public.daily_entries (id, user_id, goal_id, date, value) values ('91000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', '90000000-0000-0000-0000-000000000001', current_date, 30);
 insert into public.health_samples (user_id, metric, value, unit, recorded_at, source) values ('00000000-0000-0000-0000-00000000000a', 'body_mass', 85.3, 'kg', now(), 'manual');
+insert into public.ingest_tokens (id, user_id, token_hash) values ('92000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', 'abc123');
+insert into public.health_workouts (user_id, external_id, name, started_at, ended_at) values ('00000000-0000-0000-0000-00000000000a', 'W1', 'Walk', now(), now());
 
 -- Upsert (what the sync engine sends) works for the owner.
 insert into public.sets (id, user_id, session_id, exercise_id, set_number, weight_kg, reps, logged_at) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', '60000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 1, 82.5, 8, now())
@@ -48,7 +50,7 @@ declare
   t text;
   n int;
 begin
-  foreach t in array array['programs','program_versions','program_days','program_items','exercises','exercise_aliases','sessions','sets','cardio_entries','daily_goals','daily_entries','health_samples'] loop
+  foreach t in array array['programs','program_versions','program_days','program_items','exercises','exercise_aliases','sessions','sets','cardio_entries','daily_goals','daily_entries','health_samples','ingest_tokens','health_workouts'] loop
     execute format('select count(*) from public.%I', t) into n;
     assert n = 0, format('B must not see rows in %s', t);
     execute format('update public.%I set user_id = user_id', t);

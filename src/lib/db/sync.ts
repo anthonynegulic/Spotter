@@ -175,7 +175,7 @@ export async function pull(c: SupabaseClient): Promise<void> {
 /** Postgres numeric comes back as a string; the app wants numbers. */
 const NUMERIC_FIELDS = new Set([
   "weight_kg", "increment_kg", "duration_min", "incline", "speed_kmh", "distance_km", "duration_minutes", "target_weight_kg",
-  "target", "target_per_kg", "value",
+  "target", "target_per_kg", "value", "duration_s", "active_kcal", "avg_hr", "max_hr",
 ]);
 function normaliseNumbers(row: Record<string, unknown>): Record<string, unknown> {
   const out = { ...row };

@@ -4,6 +4,8 @@ import type {
   DailyEntryRow,
   DailyGoalRow,
   HealthSampleRow,
+  HealthWorkoutRow,
+  IngestTokenRow,
   ExerciseAliasRow,
   ExerciseRow,
   ProfileRow,
@@ -50,6 +52,8 @@ export class SpotterDB extends Dexie {
   daily_goals!: EntityTable<DailyGoalRow, "id">;
   daily_entries!: EntityTable<DailyEntryRow, "id">;
   health_samples!: EntityTable<HealthSampleRow, "id">;
+  ingest_tokens!: EntityTable<IngestTokenRow, "id">;
+  health_workouts!: EntityTable<HealthWorkoutRow, "id">;
   outbox!: EntityTable<OutboxEntry, "seq">;
   meta!: EntityTable<MetaEntry, "key">;
 
@@ -73,6 +77,10 @@ export class SpotterDB extends Dexie {
       daily_goals: "id",
       daily_entries: "id, goal_id, date",
       health_samples: "id, metric, local_date",
+    });
+    this.version(3).stores({
+      ingest_tokens: "id",
+      health_workouts: "id, started_at",
     });
   }
 }

@@ -5,6 +5,7 @@ import { ChevronRight, Dumbbell } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { ActivityCard, BodyCard } from "@/components/progress/HealthCards";
 import { MetricToggle, RangeTabs } from "@/components/progress/RangeTabs";
 import { compact } from "@/components/progress/TrendChart";
 import { WeekBars } from "@/components/progress/WeekBars";
@@ -48,6 +49,8 @@ function Progress() {
       <RangeTabs value={range} onChange={setRange} />
       <Consistency data={data} range={range} />
       <RecentPrs data={data} />
+      <BodyCard range={range} />
+      <ActivityCard range={range} />
       <Lifts data={data} />
     </div>
   );

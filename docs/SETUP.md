@@ -21,6 +21,10 @@ Run each new migration file once, in filename order, as later phases add them.
 | `20261019000000_phase1.sql` | Phase 1 | All tables, privacy rules |
 | `20261021000000_exercise_merge.sql` | Phase 2, milestone B | Lets exercises be merged ("Merge with…") |
 | `20261022000000_goals_and_health.sql` | Phase 2, milestone C | Daily goals, their entries, body weight and Apple Health samples |
+| `20261023000000_health_bridge.sql` | Phase 2, milestone D | Ingest tokens and Watch workouts for the Apple Health bridge |
+
+The Apple Health bridge also needs the `health-ingest` Edge Function deployed;
+see `docs/DEPLOY_HEALTH_BRIDGE.md`.
 
 Supabase's SQL editor may warn that a query creates tables without RLS. The
 Phase 1 file turns RLS on in a loop the checker can't see, so choosing "Run
@@ -97,3 +101,18 @@ need your iPhone:
 - [ ] Start a rest timer, lock the phone for a minute, unlock → time is right.
 - [ ] Cardio logs in two taps at the program's duration.
 - [ ] Sign in as Abrar on her phone → she sees none of your programs or sets.
+
+## 7. Apple Health (Health Auto Export)
+
+Once the `health-ingest` function is deployed (`docs/DEPLOY_HEALTH_BRIDGE.md`),
+each person sets this up on their own iPhone:
+
+1. Spotter → Program → **Settings & Apple Health** → **Create a token**, and
+   copy it (it's only shown once).
+2. In Health Auto Export, follow **How to set up Health Auto Export** on that
+   screen: one automation for Health Metrics and one for Workouts.
+3. Run each automation's manual sync and check **Last received** updates.
+
+If "Last received" goes stale, open Health Auto Export: iOS only runs
+background automations when it decides to. Tokens can be revoked from the same
+screen.

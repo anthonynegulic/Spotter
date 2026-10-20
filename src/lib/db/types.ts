@@ -204,6 +204,35 @@ export interface HealthSampleRow {
   deleted_at: string | null;
 }
 
+export interface IngestTokenRow {
+  id: string;
+  user_id: string;
+  /** SHA-256 of the token; the token itself is shown once and never stored. */
+  token_hash: string;
+  label: string | null;
+  created_at: string;
+  last_used_at: string | null;
+  revoked_at: string | null;
+  updated_at?: string;
+}
+
+export interface HealthWorkoutRow {
+  id: string;
+  user_id: string;
+  external_id: string;
+  name: string;
+  started_at: string;
+  ended_at: string;
+  duration_s: number | null;
+  active_kcal: number | null;
+  avg_hr: number | null;
+  max_hr: number | null;
+  source: string | null;
+  created_at: string;
+  updated_at?: string;
+  deleted_at: string | null;
+}
+
 export const SYNCED_TABLES = [
   "profiles",
   "programs",
@@ -218,6 +247,8 @@ export const SYNCED_TABLES = [
   "daily_goals",
   "daily_entries",
   "health_samples",
+  "ingest_tokens",
+  "health_workouts",
 ] as const;
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
 
@@ -235,6 +266,8 @@ export interface RowMap {
   daily_goals: DailyGoalRow;
   daily_entries: DailyEntryRow;
   health_samples: HealthSampleRow;
+  ingest_tokens: IngestTokenRow;
+  health_workouts: HealthWorkoutRow;
 }
 
 /** A row paired with its table, for writing several tables in one go. */
