@@ -25,6 +25,10 @@ insert into public.sessions (id, user_id, program_id, program_day_id, day_key, n
 insert into public.sets (id, user_id, session_id, exercise_id, set_number, weight_kg, reps, logged_at) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', '60000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 1, 80, 8, now());
 insert into public.cardio_entries (id, user_id, session_id, name, duration_min, logged_at) values ('80000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', '60000000-0000-0000-0000-000000000001', 'Walk', 20, now());
 
+insert into public.daily_goals (id, user_id, type, label, target, unit) values ('90000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', 'protein', 'Protein', 170, 'g');
+insert into public.daily_entries (id, user_id, goal_id, date, value) values ('91000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', '90000000-0000-0000-0000-000000000001', current_date, 30);
+insert into public.health_samples (user_id, metric, value, unit, recorded_at, source) values ('00000000-0000-0000-0000-00000000000a', 'body_mass', 85.3, 'kg', now(), 'manual');
+
 -- Upsert (what the sync engine sends) works for the owner.
 insert into public.sets (id, user_id, session_id, exercise_id, set_number, weight_kg, reps, logged_at) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', '60000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 1, 82.5, 8, now())
   on conflict (id) do update set weight_kg = excluded.weight_kg;
@@ -44,7 +48,7 @@ declare
   t text;
   n int;
 begin
-  foreach t in array array['programs','program_versions','program_days','program_items','exercises','exercise_aliases','sessions','sets','cardio_entries'] loop
+  foreach t in array array['programs','program_versions','program_days','program_items','exercises','exercise_aliases','sessions','sets','cardio_entries','daily_goals','daily_entries','health_samples'] loop
     execute format('select count(*) from public.%I', t) into n;
     assert n = 0, format('B must not see rows in %s', t);
     execute format('update public.%I set user_id = user_id', t);
@@ -77,6 +81,14 @@ do $$ begin
 end $$;
 
 -- ... and can't attach own rows to A's parents.
+do $$ begin
+  begin
+    insert into public.daily_entries (id, user_id, goal_id, date, value) values (gen_random_uuid(), '00000000-0000-0000-0000-00000000000b', '90000000-0000-0000-0000-000000000001', current_date, 999);
+    raise exception 'B added an entry to A''s goal';
+  exception when foreign_key_violation then null;
+  end;
+end $$;
+
 do $$ begin
   begin
     insert into public.sets (id, user_id, session_id, exercise_id, set_number, weight_kg, reps, logged_at) values (gen_random_uuid(), '00000000-0000-0000-0000-00000000000b', '60000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 1, 1, 1, now());

@@ -20,6 +20,7 @@ Run each new migration file once, in filename order, as later phases add them.
 |---|---|---|
 | `20261019000000_phase1.sql` | Phase 1 | All tables, privacy rules |
 | `20261021000000_exercise_merge.sql` | Phase 2, milestone B | Lets exercises be merged ("Merge with…") |
+| `20261022000000_goals_and_health.sql` | Phase 2, milestone C | Daily goals, their entries, body weight and Apple Health samples |
 
 Supabase's SQL editor may warn that a query creates tables without RLS. The
 Phase 1 file turns RLS on in a loop the checker can't see, so choosing "Run

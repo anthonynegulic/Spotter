@@ -48,6 +48,18 @@ Notable product and technical decisions, with a line on why. Newest at the botto
 - **Merging is one-way and can't be undone.** The picked exercise keeps its name; the other's sets, program items, in-progress plans and aliases move across, its name becomes an alias, and it's retired with `merged_into` pointing at the survivor. Aliases already on the survivor aren't duplicated (the server enforces one per exercise).
 - **Merges repair themselves across phones.** After every pull, any set still pointing at a retired exercise (logged offline on another phone during the merge) is moved to where it went.
 
+## Daily goals
+
+- **Defaults:** 10,000 steps, 500 kcal active energy, 30 exercise minutes, protein at 2 g per kg of body weight (rounded to 5 g; 150 g until a weight exists), 2,500 ml water. All editable, hideable and reorderable; custom yes/no goals can be added.
+- **Energy is shown in kcal** (Ante's call). Apple Health on an Australian phone exports kJ, so the bridge converts on the way in.
+- **Each quick-add is its own entry** and the day's value is the sum, so a mistaken +30 g can be removed on its own. Steps, calories and minutes typed by hand replace the day's total instead. A yes/no goal is one entry of 1.
+- **Automatic goals prefer Apple Health's daily total** for the day and fall back to what was typed in; they don't add together, so nothing is counted twice.
+- **Days are the phone's local calendar day** (YYYY-MM-DD), so goals reset at local midnight wherever you are, and the screen rolls over at midnight if it's left open. You can step back up to 30 days to fill in a forgotten entry.
+- **Streaks** count consecutive days met, ending today or, while today is still in progress, yesterday. Days before a goal existed don't count. Streak chips use the warm accent, like PRs: both are celebrations.
+- **Default goals use ids derived from the user and goal type**, and are only created after this phone has pulled goals from the server once. Two phones setting up at the same time create the same rows instead of duplicates, and a new phone never pushes defaults over targets edited elsewhere.
+- **Body weight lives in `health_samples`** (metric `body_mass`), whether typed in or from Apple Health, so the protein target always uses the latest weigh-in from either.
+- **Health samples are keyed by user, metric and time, not source.** Apple Health relabels a day's source during the day ("Watch" becomes "Watch|iPhone" once both contribute), so keying on it would count some days twice. Daily totals carry `local_date`, the calendar day they belong to, so a phone in a different time zone still files them correctly.
+
 ## Import
 
 - **Silent matching is conservative.** Exact name, then alias, then a fuzzy match only when every word lines up after expanding abbreviations (DB, BB, RDL, OHP…), ignoring word order and plurals, and allowing a one-letter typo in longer words. Different equipment never fuzzy-matches. Anything less certain becomes a new exercise; a duplicate can be merged in Phase 2, but a wrong merge silently corrupts history.

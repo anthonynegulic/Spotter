@@ -61,4 +61,5 @@ sleep 3
 
 node e2e/workout.e2e.mjs
 node e2e/program.e2e.mjs
+node e2e/goals.e2e.mjs
 node e2e/progress.e2e.mjs

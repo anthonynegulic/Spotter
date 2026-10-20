@@ -158,6 +158,52 @@ export interface ProfileRow {
   updated_at?: string;
 }
 
+export type GoalType = "steps" | "active_energy" | "exercise_minutes" | "protein" | "water" | "custom";
+
+export interface DailyGoalRow {
+  id: string;
+  user_id: string;
+  type: GoalType;
+  label: string;
+  /** Fixed target; null when derived (protein per kg of body weight). */
+  target: number | null;
+  target_per_kg: number | null;
+  unit: string;
+  /** "auto" goals take their value from Apple Health when it's there. */
+  source: "auto" | "manual";
+  sort: number;
+  hidden: boolean;
+  created_at: string;
+  updated_at?: string;
+  deleted_at: string | null;
+}
+
+export interface DailyEntryRow {
+  id: string;
+  user_id: string;
+  goal_id: string;
+  /** Local calendar day, YYYY-MM-DD. */
+  date: string;
+  value: number;
+  created_at: string;
+  updated_at?: string;
+  deleted_at: string | null;
+}
+
+export interface HealthSampleRow {
+  id: string;
+  user_id: string;
+  metric: string;
+  value: number;
+  unit: string;
+  recorded_at: string;
+  local_date: string | null;
+  source: string | null;
+  created_at: string;
+  updated_at?: string;
+  deleted_at: string | null;
+}
+
 export const SYNCED_TABLES = [
   "profiles",
   "programs",
@@ -169,6 +215,9 @@ export const SYNCED_TABLES = [
   "sessions",
   "sets",
   "cardio_entries",
+  "daily_goals",
+  "daily_entries",
+  "health_samples",
 ] as const;
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
 
@@ -183,6 +232,9 @@ export interface RowMap {
   sessions: SessionRow;
   sets: SetRow;
   cardio_entries: CardioRow;
+  daily_goals: DailyGoalRow;
+  daily_entries: DailyEntryRow;
+  health_samples: HealthSampleRow;
 }
 
 /** A row paired with its table, for writing several tables in one go. */
